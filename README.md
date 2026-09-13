@@ -14,6 +14,8 @@ Os clientes podem combinar produtos de várias lojas em um único carrinho. O ch
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Para correr localmente
+É necessário ter Docker Desktop e Supabase CLI instalados.
+
 primeira vez:
 npm ci
 npm run db:setup
