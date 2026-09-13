@@ -1,0 +1,107 @@
+name: mesa-marketplace
+
+x-workspace: &workspace
+  build:
+    context: .
+  # Keep the host's absolute project path so sibling containers created by the
+  # Supabase CLI can mount migrations, functions and Studio snippets.
+  working_dir: "${PWD}"
+  volumes:
+    - type: bind
+      source: .
+      target: "${PWD}"
+    - type: volume
+      source: node_modules
+      target: "${PWD}/node_modules"
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  supabase:
+    <<: *workspace
+    init: true
+    volumes:
+      - type: bind
+        source: .
+        target: "${PWD}"
+      - type: volume
+        source: node_modules
+        target: "${PWD}/node_modules"
+      # The pinned Supabase CLI creates and manages the local Supabase containers.
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        lock_hash="$$(sha256sum package-lock.json | cut -d ' ' -f 1)"
+        installed_hash="$$(cat node_modules/.mesa-lock-hash 2>/dev/null || true)"
+        if [ "$$lock_hash" != "$$installed_hash" ] || [ ! -x node_modules/.bin/next ]; then
+          npm ci --no-audit --no-fund
+          printf '%s\n' "$$lock_hash" > node_modules/.mesa-lock-hash
+        fi
+
+        socat TCP4-LISTEN:54321,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54321 &
+        socat TCP4-LISTEN:54322,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54322 &
+        socat TCP4-LISTEN:54325,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54325 &
+
+        npm run db:start
+
+        cleanup() {
+          trap - EXIT
+          node node_modules/supabase/dist/supabase.js stop >/dev/null 2>&1 || true
+        }
+        trap 'cleanup; exit 0' INT TERM
+        trap cleanup EXIT
+
+        node scripts/write-local-env.mjs
+        npm run db:initialize
+        npm run seed:users
+        touch /tmp/mesa-supabase-ready
+
+        while :; do
+          sleep 60 & wait $$!
+        done
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          test -f /tmp/mesa-supabase-ready &&
+          node --env-file=.env.local node_modules/supabase/dist/supabase.js status >/dev/null 2>&1
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 2m
+    stop_grace_period: 2m
+
+  web:
+    <<: *workspace
+    init: true
+    depends_on:
+      supabase:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - type: bind
+        source: .
+        target: "${PWD}"
+      - type: volume
+        source: node_modules
+        target: "${PWD}/node_modules"
+      - type: volume
+        source: next_cache
+        target: "${PWD}/.next"
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        socat TCP4-LISTEN:54321,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54321 &
+        socat TCP4-LISTEN:54322,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54322 &
+        socat TCP4-LISTEN:54325,bind=127.0.0.1,fork,reuseaddr TCP:host.docker.internal:54325 &
+        exec node node_modules/next/dist/bin/next dev --webpack --hostname 0.0.0.0
+
+volumes:
+  node_modules:
+  next_cache:

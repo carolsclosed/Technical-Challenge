@@ -1,0 +1,1 @@
+ALTER VIEW public.account_flags SET (security_invoker = true);
