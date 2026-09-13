@@ -41,9 +41,18 @@ docker compose up --build
 - Superadministradores gerem comerciantes; administradores de comércios gerem os seus negócios e equipas.
 - Funcionários e operadores possuem permissões mais restritas, limitadas às lojas que lhes foram atribuídas.
 - Dados de tenant indexados e leituras de catálogo paginadas suportam o crescimento de lojas.
-- O website utiliza o SDK do Supabase com RLS, sem chamadas de RPC à base de dados.
-- O único método de pagamento é o pagamento no ato da entrega.\
-  
+- O website utiliza o SDK do Supabase com RLS.
+- O único método de pagamento é o pagamento no ato da entrega.
+
+## justificações
+
+- Nodemailer através de um email assinado: as credenciais SMTP permanecem no servidor e todos os emails usam o mesmo padrão visual.
+- Docker Compose com Supabase e Mailpit: torna o ambiente local reproduzível e permite testar emails sem enviar mensagens reais.
+- next-intl e next-themes: idioma e tema ficam centralizados e persistentes sem duplicar páginas.
+- Tabelas de eventos de estado: cada alteração de encomenda fica registada, permitindo auditoria e timelines confiáveis.
+- preços em cêntimos inteiros: evita erros de arredondamento monetário.
+
+
 ## contas
 Estas contas são recursos de desenvolvimento e não devem ser utilizadas em produção.
 
