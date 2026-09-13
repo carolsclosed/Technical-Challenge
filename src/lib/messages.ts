@@ -48,6 +48,11 @@ export const messages = {
     emailLinkInvalid:
       "This verification link is invalid or expired. Request a new verification or recovery email.",
     brand: "mesa",
+    metadataTitle: "mesa. · Local food, together",
+    metadataDescription:
+      "Discover local stores, order across kitchens, and follow each delivery. Cash on delivery.",
+    footerTagline: "Local kitchens. Together.",
+    navigationMenu: "Navigation menu",
     explore: "Explore stores",
     orders: "My orders",
     cart: "Cart",
@@ -280,6 +285,11 @@ export const messages = {
     emailLinkInvalid:
       "O link de verificação é inválido ou expirou. Peça um novo email de verificação ou recuperação.",
     brand: "mesa",
+    metadataTitle: "mesa. · Comida local, em conjunto",
+    metadataDescription:
+      "Descubra lojas locais, faça pedidos de várias cozinhas e acompanhe cada entrega. Pagamento em numerário na entrega.",
+    footerTagline: "Cozinhas locais. Juntas.",
+    navigationMenu: "Menu de navegação",
     explore: "Explorar lojas",
     orders: "Os meus pedidos",
     cart: "Carrinho",

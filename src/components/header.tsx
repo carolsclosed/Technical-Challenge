@@ -87,9 +87,7 @@ export function Header({
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label={
-                    locale === "pt-PT" ? "Menu de navegação" : "Navigation menu"
-                  }
+                  aria-label={t("navigationMenu")}
                 >
                   <Menu />
                 </Button>
